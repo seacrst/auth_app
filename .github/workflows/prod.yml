@@ -20,10 +20,10 @@ jobs:
       uses: actions/cache@v3
       with:
         path: |
-          # app-service/.cargo
-          # app-service/target/
-          auth-service/.cargo
-          auth-service/target/
+          # app_service/.cargo
+          # app_service/target/
+          auth_service/.cargo
+          auth_service/target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: ${{ runner.os }}-cargo-
 
@@ -33,14 +33,14 @@ jobs:
         profile: minimal
         toolchain: stable
 
-    # - name: Build and test app-service code
-      # working-directory: ./app-service
+    # - name: Build and test app_service code
+      # working-directory: ./app_service
       # run: |
         # cargo build --verbose
         # cargo test --verbose
 
-    - name: Build and test auth-service code
-      working-directory: ./auth-service
+    - name: Build and test auth_service code
+      working-directory: ./auth_service
       run: |
         cargo build --verbose
         cargo test --verbose

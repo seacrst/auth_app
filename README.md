@@ -1,10 +1,10 @@
 ## Setup & Building
 ```bash
 cargo install cargo-watch
-cd app-service
+cd app_service
 cargo build
 cd ..
-cd auth-service
+cd auth_service
 cargo build
 cd ..
 ```
@@ -12,7 +12,7 @@ cd ..
 ## Run servers locally (Manually)
 #### App service
 ```bash
-cd app-service
+cd app_service
 cargo watch -q -c -w src/ -w assets/ -w templates/ -x run
 ```
 
@@ -20,7 +20,7 @@ visit http://localhost:8000
 
 #### Auth service
 ```bash
-cd auth-service
+cd auth_service
 cargo watch -q -c -w src/ -w assets/ -x run
 ```
 

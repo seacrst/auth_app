@@ -1,8 +1,8 @@
 version: "3.9"
 services:
-  app-service:
+  app_service:
     build:
-      context: ./app-service # specify directory where local Dockerfile is located
-  auth-service:
+      context: ./app_service # specify directory where local Dockerfile is located
+  auth_service:
     build:
-      context: ./auth-service # specify directory where local Dockerfile is located
+      context: ./auth_service # specify directory where local Dockerfile is located
