@@ -40,7 +40,7 @@ async fn should_return_422_if_malformed_input() {
 
 #[tokio::test]
 async fn should_return_201_if_valid_input() {
-    let app = TestApp::new().await;
+    let test_app = TestApp::new().await;
     let body = serde_json::json!(
         {
             "email": "test_user@email.com",
@@ -48,7 +48,7 @@ async fn should_return_201_if_valid_input() {
             "requires2FA": true
         }
     );
-    let response = app.post_signup(&body).await;
+    let response = test_app.post_signup(&body).await;
 
     assert_eq!(response.status().as_u16(), 201);
 
