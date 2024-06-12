@@ -1,3 +1,8 @@
+## Run servers locally (Docker)
+```bash
+./docker.sh
+```
+
 ## Setup & Building
 ```bash
 cargo install cargo-watch
