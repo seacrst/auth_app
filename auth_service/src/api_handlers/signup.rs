@@ -4,7 +4,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use crate::{app_state::AppState, domain::{AuthApiError, Email, Password, User}};
+use crate::{app::state::AppState, services::api::AuthApiError, user::{Email, Password, User}};
 
 #[derive(Deserialize, Validate, Debug)]
 pub struct SignupRequest {

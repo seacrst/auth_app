@@ -1,5 +1,8 @@
 use crate::utils::{get_random_email, TestApp};
-use auth_service::{routes::SignupResponse, ErrorResponse};
+use auth_service::{
+    api_handlers::SignupResponse,
+    services::api::ErrorResponse
+};
 use serde_json::json;
 
 #[tokio::test]

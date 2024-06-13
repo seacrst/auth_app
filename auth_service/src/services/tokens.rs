@@ -1,14 +1,29 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, sync::Arc};
+use async_trait::async_trait;
+use tokio::sync::RwLock;
 
-use crate::domain::data_stores::{BannedTokenStore, BannedTokenStoreError};
+pub type BannedTokenStoreType = Arc<RwLock<dyn BannedTokenStore + Send + Sync>>;
 
 #[derive(Default)]
-pub struct HashsetBannedTokenStore {
+pub struct BannedTokens {
     tokens: HashSet<String>,
 }
 
+
+#[derive(Debug)]
+pub enum BannedTokenStoreError {
+    UnexpectedError,
+}
+
+#[async_trait]
+pub trait BannedTokenStore {
+    async fn add_token(&mut self, token: String) -> Result<(), BannedTokenStoreError>;
+    async fn contains_token(&self, token: &str) -> Result<bool, BannedTokenStoreError>;
+}
+
+
 #[async_trait::async_trait]
-impl BannedTokenStore for HashsetBannedTokenStore {
+impl BannedTokenStore for BannedTokens {
     async fn add_token(&mut self, token: String) -> Result<(), BannedTokenStoreError> {
         self.tokens.insert(token);
         Ok(())
@@ -24,7 +39,7 @@ mod tests {
     use super::*;
     #[tokio::test]
     async fn test_add_token() {
-        let mut store = HashsetBannedTokenStore::default();
+        let mut store = BannedTokens::default();
         let token = "test_token".to_owned();
 
         let result = store.add_token(token.clone()).await;
@@ -35,7 +50,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_contains_token() {
-        let mut store = HashsetBannedTokenStore::default();
+        let mut store = BannedTokens::default();
         let token = "test_token".to_owned();
         store.tokens.insert(token.clone());
 

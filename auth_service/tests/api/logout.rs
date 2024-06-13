@@ -1,12 +1,34 @@
-use auth_service::{app::ErrorResponse, utils::constants::JWT_COOKIE_NAME};
+use auth_service::services::{api::ErrorResponse, constants::JWT_COOKIE_NAME};
 use reqwest::Url;
 
-use crate::utils::TestApp;
+use crate::utils::{get_random_email, TestApp};
 
 #[tokio::test]
-#[tokio::test]
 async fn should_return_400_if_jwt_cookie_missing() {
-    todo!()
+    let app = TestApp::new().await;
+
+    let response = app.post_logout().await;
+
+    assert_eq!(
+        response.status().as_u16(),
+        400,
+        "The API did not return a 400 BAD REQUEST",
+    );
+
+    let auth_cookie = response
+        .cookies()
+        .find(|cookie| cookie.name() == JWT_COOKIE_NAME);
+
+    assert!(auth_cookie.is_none());
+
+    assert_eq!(
+        response
+            .json::<ErrorResponse>()
+            .await
+            .expect("Could not deserialize response body to ErrorResponse")
+            .error,
+        "Missing auth token".to_owned()
+    );
 }
 
 #[tokio::test]
@@ -87,7 +109,7 @@ async fn should_return_200_if_valid_jwt_cookie() {
 
     assert!(auth_cookie.value().is_empty());
 
-    let banned_token_store = app.banned_token_store.read().await;
+    let banned_token_store = app.banned_tokens.read().await;
     let contains_token = banned_token_store
         .contains_token(token)
         .await

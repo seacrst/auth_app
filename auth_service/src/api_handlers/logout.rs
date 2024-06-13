@@ -3,17 +3,18 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse};
 use axum_extra::extract::{cookie, CookieJar};
 
 use crate::{
-    app_state::AppState,
-    domain::AuthApiError,
-    utils::{auth::validate_token, constants::JWT_COOKIE_NAME},
+    app::state::AppState, 
+    services::{
+        api::AuthApiError, 
+        auth::validate_token, 
+        constants::JWT_COOKIE_NAME
+    }
 };
-
-
 
 pub async fn logout(State(state): State<AppState>, jar: CookieJar) -> (CookieJar, Result<impl IntoResponse, AuthApiError>) {
     let cookie = match jar.get(JWT_COOKIE_NAME) {
         Some(cookie) => cookie,
-        None => return (jar, Err(AuthApiError::MissingToken)),
+        None => return (jar, Err(AuthApiError::MissingToken))
     };
 
     // Validate token

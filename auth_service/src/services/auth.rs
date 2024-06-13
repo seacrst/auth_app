@@ -3,9 +3,13 @@ use chrono::Utc;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::{app_state::BannedTokenStoreType, domain::Email};
+use crate::user::Email;
 
-use super::constants::{JWT_COOKIE_NAME, JWT_SECRET};
+#[allow(unused_imports)]
+use super::{
+    constants::{JWT_COOKIE_NAME, JWT_SECRET}, 
+    tokens::{BannedTokenStoreType, BannedTokenStore}
+};
 
 // This is definitely NOT a good secret. We will update it soon!
 // const JWT_SECRET: &str = "secret";
@@ -105,7 +109,8 @@ mod tests {
 
     use tokio::sync::RwLock;
 
-    use crate::{domain::BannedTokenStore, services::HashsetBannedTokenStore};
+
+    use crate::services::tokens::BannedTokens;
 
     use super::*;
 
@@ -142,7 +147,7 @@ mod tests {
     async fn test_validate_token_with_valid_token() {
         let email = Email::parse("test@example.com".to_owned()).unwrap();
         let token = generate_auth_token(&email).unwrap();
-        let banned_token_store = Arc::new(RwLock::new(HashsetBannedTokenStore::default()));
+        let banned_token_store = Arc::new(RwLock::new(BannedTokens::default()));
         let result = validate_token(&token, banned_token_store).await.unwrap();
         assert_eq!(result.sub, "test@example.com");
 
@@ -157,7 +162,7 @@ mod tests {
     #[tokio::test]
     async fn test_validate_token_with_invalid_token() {
         let token = "invalid_token".to_owned();
-        let banned_token_store = Arc::new(RwLock::new(HashsetBannedTokenStore::default()));
+        let banned_token_store = Arc::new(RwLock::new(BannedTokens::default()));
         let result = validate_token(&token, banned_token_store).await;
         assert!(result.is_err());
     }
@@ -166,7 +171,7 @@ mod tests {
     async fn test_validate_token_with_banned_token() {
         let email = Email::parse("test@example.com".to_owned()).unwrap();
         let token = generate_auth_token(&email).unwrap();
-        let mut hs = HashsetBannedTokenStore::default();
+        let mut hs = BannedTokens::default();
         hs.add_token(token.clone()).await.unwrap();
         let banned_token_store = Arc::new(RwLock::new(hs));
         let result = validate_token(&token, banned_token_store).await;

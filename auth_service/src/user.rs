@@ -1,4 +1,7 @@
-use super::{Email, Password};
+pub mod credentials;
+pub mod store;
+
+pub use credentials::{Email, Password};
 
 
 #[derive(Clone, PartialEq, Debug)]

@@ -1,16 +1,36 @@
-use std::collections::HashMap;
-// use  crate::entities::{Email, Password, User};
-use crate::domain::{Email, Password, User, UserStore, UserStoreError};
-use async_trait::async_trait;
+use std::{collections::HashMap, sync::Arc};
 
+use async_trait::async_trait;
+use tokio::sync::RwLock;
+
+use super::{Email, Password, User};
+
+pub type UserStoreType = Arc<RwLock<dyn UserStore + Send + Sync>>;
+
+#[async_trait]
+pub trait UserStore {
+    async fn add_user(&mut self, user: User) -> Result<(), UserStoreError>;
+    async fn get_user(&self, email: &Email) -> Result<User, UserStoreError>;
+    async fn validate_user(&self, email: &Email, password: &Password) -> Result<(), UserStoreError>;
+}
 
 #[derive(Default)]
-pub struct UserDataStore {
+pub struct Users {
     users: HashMap<Email, User>
 }
 
+#[derive(Debug, PartialEq)]
+pub enum UserStoreError {
+    UserAlreadyExists,
+    UserNotFound,
+    InvalidCredentials,
+    UnexpectedError
+}
+
+
+
 #[async_trait]
-impl UserStore for UserDataStore {
+impl UserStore for Users {
     async fn add_user(&mut self, user: User) -> Result<(), UserStoreError> {
         if self.users.contains_key(&user.email) {
             return Err(UserStoreError::UserAlreadyExists);
@@ -48,7 +68,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_user() {
-        let mut store = UserDataStore::default();
+        let mut store = Users::default();
         let user = User {
             email: Email::parse(String::from("johndoe@mail.com")).unwrap(), 
             password: Password::parse(String::from("plsdonthackme")).unwrap(), 
@@ -66,7 +86,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_user() {
-        let mut store = UserDataStore::default();
+        let mut store = Users::default();
         let email = Email::parse(String::from("johndoe@mail.com")).unwrap();
         let password = Password::parse(String::from("plsdonthackme")).unwrap();
 
@@ -91,7 +111,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_validate_user() {
-        let mut store = UserDataStore::default();
+        let mut store = Users::default();
         let email = Email::parse(String::from("johndoe@mail.com")).unwrap();
         let password = Password::parse(String::from("plsdonthackme")).unwrap();
 

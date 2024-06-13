@@ -8,8 +8,8 @@ impl AppConfig<'_> {
             login: "/login",
             logout: "/logout",
             signup: "/signup",
-            verify_2fa: "/verify_2fa",
-            verify_token: "/verify_token"
+            verify_2fa: "/verify-2fa",
+            verify_token: "/verify-token"
         };
         
         Self {paths}

@@ -1,4 +1,6 @@
-use crate::utils::TestApp;
+use auth_service::services::{api::ErrorResponse, constants::JWT_COOKIE_NAME};
+
+use crate::utils::{get_random_email, TestApp};
 
 #[tokio::test]
 async fn should_return_422_if_malformed_input() {
@@ -145,19 +147,3 @@ async fn should_return_401_if_banned_token() {
     );
 }
 
-#[tokio::test]
-async fn should_return_422_if_malformed_input() {
-    let app = TestApp::new().await;
-
-    let test_cases = vec![
-        serde_json::json!({
-            "token": true,
-        }),
-        serde_json::json!({}),
-    ];
-
-    for test_case in test_cases {
-        let response = app.post_verify_token(&test_case).await;
-        assert_eq!(response.status().as_u16(), 422);
-    }
-}

@@ -1,6 +1,12 @@
 use std::sync::Arc;
 
-use auth_service::{app_state::AppState, services::UserDataStore, App};
+#[allow(dead_code, unused)]
+
+use auth_service::{
+    app::{state::AppState, App}, 
+    services::tokens::{BannedTokenStoreError, BannedTokenStoreType, BannedTokens}, 
+    user::store::Users
+};
 use reqwest::{cookie::Jar, Client, Response};
 use tokio::sync::RwLock;
 use uuid::Uuid;
@@ -8,13 +14,16 @@ use uuid::Uuid;
 pub struct TestApp {
     pub addr: String,
     pub client: Client,
-    pub cookie_jar: Arc<Jar>
+    pub cookie_jar: Arc<Jar>,
+    pub banned_tokens: BannedTokenStoreType
 }
 
 impl TestApp {
     pub async fn new() -> Self {
-        let user_store = UserDataStore::default();
-        let app_state = AppState::new(Arc::new(RwLock::new(Box::new(user_store))));
+        let user_store = Arc::new(RwLock::new(Users::default()));
+        let banned_tokens = Arc::new(RwLock::new(BannedTokens::default()));
+
+        let app_state = AppState::new(user_store, banned_tokens.clone());
 
         let app = App::build(app_state, "127.0.0.1:0")
             .await
@@ -31,7 +40,7 @@ impl TestApp {
             .build()
             .unwrap();
 
-        Self { addr, client, cookie_jar }
+        Self { addr, client, cookie_jar, banned_tokens }
     }
 
     pub async fn get_root(&self) -> Response {
@@ -40,6 +49,13 @@ impl TestApp {
             .send()
             .await
             .expect("Failed to execute request")
+    }
+
+    pub async fn post_login<Body: serde::Serialize>(&self, body: &Body) -> Response {
+        self.client.post(&format!("{}/login", &self.addr))
+        .json(body)
+        .send().await
+        .expect("Failed to execute request")
     }
 
     pub async fn get_signup(&self) -> Response {
@@ -97,10 +113,18 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
+    pub async fn post_verify_2fa(&self) -> reqwest::Response {
+        self.client
+            .post(format!("{}/verify-2fa", &self.addr))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
     pub async fn post_verify_token<Body>(&self, body: &Body) -> reqwest::Response
     where Body: serde::Serialize {
         self.client
-            .post(format!("{}/verify-token", &self.address))
+            .post(format!("{}/verify-token", &self.addr))
             .json(body)
             .send()
             .await
