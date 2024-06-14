@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the location of the .env file (change if needed)
-ENV_FILE="./auth-service/.env"
+ENV_FILE="./auth_service/.env"
 
 # Check if the .env file exists
 if ! [[ -f "$ENV_FILE" ]]; then
