@@ -33,11 +33,11 @@ jobs:
         profile: minimal
         toolchain: stable
 
-    # - name: Build and test app_service code
-      # working-directory: ./app_service
-      # run: |
-        # cargo build --verbose
-        # cargo test --verbose
+    - name: Build and test app_service code
+      working-directory: ./app_service
+      run: |
+        cargo build --verbose
+        cargo test --verbose
 
     - name: Build and test auth_service code
       working-directory: ./auth_service
