@@ -42,7 +42,7 @@ jobs:
     - name: Build and test auth_service code
       working-directory: ./auth_service
       run: |
-        export JWT_SECRET=${{ secrets.JWT_SECRET }}
+        export JWT_SECRET=secret
         cargo build --verbose
         cargo test --verbose
 
