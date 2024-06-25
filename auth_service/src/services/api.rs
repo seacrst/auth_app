@@ -37,3 +37,9 @@ impl IntoResponse for AuthApiError {
         (status, body).into_response()
     }
 }
+
+#[derive(Debug, PartialEq)]
+pub enum TwoFaCodeError {
+    LoginAttemptIdNotFound,
+    UnexpectedError,
+}

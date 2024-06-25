@@ -14,6 +14,13 @@ impl Email {
     }
 }
 
+impl AsRef<str> for Email {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+
 #[derive(Debug, Deserialize, Eq, Hash, PartialEq, Clone)]
 pub struct Password(String);
 
@@ -27,17 +34,13 @@ impl Password {
     }
 }
 
-impl AsRef<str> for Email {
-    fn as_ref(&self) -> &str {
-        &self.0
-    }
-}
 
 impl AsRef<str> for Password {
     fn as_ref(&self) -> &str {
         &self.0
     }
 }
+
 
 
 #[cfg(test)]

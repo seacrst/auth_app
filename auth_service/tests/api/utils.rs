@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use auth_service::services::two_fa::TwoFaCodeStore;
 #[allow(dead_code, unused)]
 
 use auth_service::{
@@ -15,15 +16,17 @@ pub struct TestApp {
     pub addr: String,
     pub client: Client,
     pub cookie_jar: Arc<Jar>,
-    pub banned_tokens: BannedTokenStoreType
+    pub banned_tokens: BannedTokenStoreType,
+    pub two_fa_code: Arc<RwLock<TwoFaCodeStore>>,
 }
 
 impl TestApp {
     pub async fn new() -> Self {
         let user_store = Arc::new(RwLock::new(Users::default()));
         let banned_tokens = Arc::new(RwLock::new(BannedTokens::default()));
+        let two_fa_code = Arc::new(RwLock::new(TwoFaCodeStore::default()));
 
-        let app_state = AppState::new(user_store, banned_tokens.clone());
+        let app_state = AppState::new(user_store, banned_tokens.clone(), two_fa_code.clone());
 
         let app = App::build(app_state, "127.0.0.1:0")
             .await
@@ -40,7 +43,13 @@ impl TestApp {
             .build()
             .unwrap();
 
-        Self { addr, client, cookie_jar, banned_tokens }
+        Self { 
+            addr, 
+            client, 
+            cookie_jar, 
+            banned_tokens,
+            two_fa_code
+        }
     }
 
     pub async fn get_root(&self) -> Response {

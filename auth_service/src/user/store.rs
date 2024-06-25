@@ -1,6 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
+
 use tokio::sync::RwLock;
 
 use super::{Email, Password, User};
@@ -26,8 +27,6 @@ pub enum UserStoreError {
     InvalidCredentials,
     UnexpectedError
 }
-
-
 
 #[async_trait]
 impl UserStore for Users {
