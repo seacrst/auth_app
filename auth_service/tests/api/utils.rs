@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use auth_service::services::two_fa::TwoFaCodeStore;
+use auth_service::services::{two_fa::TwoFaCodeStore, MockEmailClient};
 #[allow(dead_code, unused)]
 
 use auth_service::{
@@ -25,8 +25,14 @@ impl TestApp {
         let user_store = Arc::new(RwLock::new(Users::default()));
         let banned_tokens = Arc::new(RwLock::new(BannedTokens::default()));
         let two_fa_code = Arc::new(RwLock::new(TwoFaCodeStore::default()));
+        let email_client = Arc::new(RwLock::new(MockEmailClient));
 
-        let app_state = AppState::new(user_store, banned_tokens.clone(), two_fa_code.clone());
+        let app_state = AppState {
+            banned_token_store: banned_tokens.clone(), 
+            two_fa_code: two_fa_code.clone(),
+            email_client,
+            user_store
+        };
 
         let app = App::build(app_state, "127.0.0.1:0")
             .await

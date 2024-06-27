@@ -10,6 +10,7 @@ use tower_http::{cors::CorsLayer, services::ServeDir};
 
 pub mod config;
 pub mod state;
+pub mod email_client;
 
 use state::AppState;
 use super::api_handlers::{

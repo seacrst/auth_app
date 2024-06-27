@@ -8,7 +8,7 @@ use axum_extra::extract::CookieJar;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    app::state::AppState, services::two_fa::{LoginId, TwoFaCode}, services::{api::AuthApiError, auth::generate_auth_cookie}, user::{Email, Password}
+    app::{email_client::SendEmail, state::AppState}, services::{api::AuthApiError, auth::generate_auth_cookie, two_fa::{LoginId, TwoFaCode}}, user::{Email, Password}
 };
 
 #[derive(Deserialize)]
@@ -84,6 +84,22 @@ async fn handle_2fa(jar: CookieJar, email: &Email, state: &AppState) -> (
         .is_ok();
 
     if !added_code {
+        return (jar, Err(AuthApiError::UnexpectedError));
+    }
+
+    let email_detes = SendEmail {
+        recipient: email,
+        subject: "2FA Code",
+        content: two_fa_code.as_ref()
+    };
+
+    let sent = state.email_client.read()
+        .await
+        .send_email(email_detes)
+        .await
+        .is_ok();
+
+    if !sent {
         return (jar, Err(AuthApiError::UnexpectedError));
     }
 
