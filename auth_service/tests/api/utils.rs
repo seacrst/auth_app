@@ -1,6 +1,6 @@
 use std::{str::FromStr, sync::Arc};
 
-use auth_service::{get_postgres_pool, services::{constants::DATABASE_URL, postgres_user_store::PostgresUserStore, two_fa::TwoFaCodeStore, MockEmailClient}};
+use auth_service::{get_postgres_pool, get_redis_client, services::{constants::{DATABASE_URL, DEFAULT_REDIS_HOSTNAME}, postgres_user_store::PostgresUserStore, redis_banned_token_store::RedisBannedTokenStore, redis_two_fa_code_store::RedisTwoFACodeStore, two_fa::TwoFaCodeStore, MockEmailClient}};
 #[allow(dead_code, unused)]
 
 use auth_service::{
@@ -19,22 +19,25 @@ pub struct TestApp {
     pub client: Client,
     pub cookie_jar: Arc<Jar>,
     pub banned_tokens: BannedTokenStoreType,
-    pub two_fa_code: Arc<RwLock<TwoFaCodeStore>>,
+    pub two_fa_code: Arc<RwLock<RedisTwoFACodeStore>>,
     pub db_name: String,
     pub clean_up_called: bool
 }
 
 impl TestApp {
     pub async fn new() -> Self {
+        let redis_connection = Arc::new(RwLock::new(configure_redis()));
         let db_name = Uuid::new_v4().to_string();
         let pg_pool = configure_postgresql(&db_name).await;
         let user_store = Arc::new(RwLock::new(PostgresUserStore::new(pg_pool)));
-        let banned_tokens = Arc::new(RwLock::new(BannedTokens::default()));
-        let two_fa_code = Arc::new(RwLock::new(TwoFaCodeStore::default()));
+        let banned_token_store = Arc::new(RwLock::new(RedisBannedTokenStore::new(
+            redis_connection.clone(),
+        )));
+        let two_fa_code = Arc::new(RwLock::new(RedisTwoFACodeStore::new(redis_connection)));
         let email_client = Arc::new(RwLock::new(MockEmailClient));
 
         let app_state = AppState {
-            banned_token_store: banned_tokens.clone(), 
+            banned_token_store: banned_token_store.clone(),
             two_fa_code: two_fa_code.clone(),
             email_client,
             user_store
@@ -59,7 +62,7 @@ impl TestApp {
             addr, 
             client, 
             cookie_jar, 
-            banned_tokens,
+            banned_tokens: banned_token_store,
             two_fa_code,
             db_name,
             clean_up_called: false
@@ -256,4 +259,14 @@ async fn delete_database(db_name: &str) {
         .execute(format!(r#"DROP DATABASE "{}";"#, db_name).as_str())
         .await
         .expect("Failed to drop the database.");
+}
+
+
+fn configure_redis() -> redis::Connection {
+    let redis_hostname = DEFAULT_REDIS_HOSTNAME.to_owned();
+
+    get_redis_client(redis_hostname)
+        .expect("Failed to get Redis client")
+        .get_connection()
+        .expect("Failed to get Redis connection")
 }
