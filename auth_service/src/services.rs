@@ -7,6 +7,7 @@ pub mod auth;
 pub mod tokens;
 pub mod constants;
 pub mod two_fa;
+pub mod postgres_user_store;
 pub struct MockEmailClient;
 
 #[async_trait]

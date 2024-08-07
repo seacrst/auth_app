@@ -1,10 +1,8 @@
 use std::sync::Arc;
 use auth_service::{
     app::{state::AppState, App}, get_postgres_pool, services::{
-        constants::{prod, DATABASE_URL}, 
-        tokens::BannedTokens,
-        two_fa::TwoFaCodeStore, MockEmailClient
-    }, user::store::Users
+        constants::{prod, DATABASE_URL}, postgres_user_store::PostgresUserStore, tokens::BannedTokens, two_fa::TwoFaCodeStore, MockEmailClient
+    }
 };
 use sqlx::PgPool;
 use tokio::sync::RwLock;
@@ -12,7 +10,8 @@ use tokio::sync::RwLock;
 #[tokio::main]
 async fn main() {
     let pg_pool = configure_postgresql().await;
-    let store = Arc::new(RwLock::new(Users::default()));
+    let store = Arc::new(RwLock::new(PostgresUserStore::new(pg_pool)));
+
     let banned_token_store = Arc::new(RwLock::new(BannedTokens::default()));
     let two_fa_code = Arc::new(RwLock::new(TwoFaCodeStore::default()));
     let email_client = Arc::new(RwLock::new(MockEmailClient));
@@ -29,12 +28,10 @@ async fn main() {
 }
 
 async fn configure_postgresql() -> PgPool {
-    // Create a new database connection pool
     let pg_pool = get_postgres_pool(&DATABASE_URL)
         .await
         .expect("Failed to create Postgres connection pool!");
 
-    // Run database migrations against our test database! 
     sqlx::migrate!()
         .run(&pg_pool)
         .await
