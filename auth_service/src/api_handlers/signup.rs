@@ -15,6 +15,7 @@ pub struct SignupRequest {
     pub requires_2fa: bool,
 }
 
+#[tracing::instrument(name = "Signup", skip_all, err(Debug))]
 pub async fn signup(State(state): State<AppState>, Json(SignupRequest {email, password, requires_2fa}): Json<SignupRequest>) -> Result<impl IntoResponse, AuthApiError> {
     let user_email = Email::parse(email.clone())
         .map_err(|_| AuthApiError::InvalidCredentials)?;

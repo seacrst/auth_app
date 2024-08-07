@@ -10,6 +10,7 @@ pub mod two_fa;
 pub mod postgres_user_store;
 pub mod redis_banned_token_store;
 pub mod redis_two_fa_code_store;
+pub mod tracing;
 pub struct MockEmailClient;
 
 #[async_trait]
