@@ -1,7 +1,7 @@
 use redis::{Client, RedisResult};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
-pub mod api_handlers;
+pub mod route_handlers;
 pub mod app;
 pub mod services;
 pub mod user;

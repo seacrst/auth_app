@@ -93,9 +93,8 @@ async fn handle_2fa(jar: CookieJar, email: &Email, state: &AppState) -> (
         content: two_fa_code.as_ref()
     };
 
-    let sent = state.email_client.read()
-        .await
-        .send_email(email_detes)
+    let sent = state.email_client
+        .send_email(email_detes.recipient, email_detes.subject, email_detes.content)
         .await
         .is_ok();
 

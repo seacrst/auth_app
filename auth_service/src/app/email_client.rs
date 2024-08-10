@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 
 use crate::user::Email;
+use color_eyre::eyre::Result;
 
 pub struct SendEmail<'a> {
     pub recipient: &'a Email,
@@ -10,5 +11,5 @@ pub struct SendEmail<'a> {
 
 #[async_trait]
 pub trait EmailClient {
-   async fn send_email<'a>(&self, email_detes: SendEmail<'a>) -> Result<(), String>;
+   async fn send_email(&self, recipient: &Email, subject: &str, content: &str) -> Result<()>;
 }

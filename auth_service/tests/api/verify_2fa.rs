@@ -1,4 +1,4 @@
-use auth_service::{api_handlers::TwoFactorAuthResponse, services::{api::ErrorResponse, constants::JWT_COOKIE_NAME, two_fa::{LoginId, TwoFaCode, TwoFaCodes}}, user::Email};
+use auth_service::{route_handlers::TwoFactorAuthResponse, services::{api::ErrorResponse, constants::JWT_COOKIE_NAME, two_fa::{LoginId, TwoFaCode, TwoFaCodes}}, user::Email};
 
 use crate::utils::{get_random_email, TestApp};
 

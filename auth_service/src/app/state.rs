@@ -8,7 +8,7 @@ use crate::{services::two_fa::TwoFaCodes, services::tokens::BannedTokenStoreType
 use super::email_client::EmailClient;
 
 pub type TwoFaCodeStoreType = Arc<RwLock<dyn TwoFaCodes + Send + Sync>>;
-pub type EmailClientType = Arc<RwLock<dyn EmailClient + Send + Sync>>;
+pub type EmailClientType = Arc<dyn EmailClient + Send + Sync>;
 
 #[derive(Clone)]
 pub struct AppState {

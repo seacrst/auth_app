@@ -1,6 +1,6 @@
 use std::{str::FromStr, sync::Arc};
 
-use auth_service::{get_postgres_pool, get_redis_client, services::{constants::{DATABASE_URL, DEFAULT_REDIS_HOSTNAME}, postgres_user_store::PostgresUserStore, redis_banned_token_store::RedisBannedTokenStore, redis_two_fa_code_store::RedisTwoFACodeStore, two_fa::TwoFaCodeStore, MockEmailClient}};
+use auth_service::{get_postgres_pool, get_redis_client, services::{constants::{test, DATABASE_URL, DEFAULT_REDIS_HOSTNAME}, postgres_user_store::PostgresUserStore, postmark_email_client::PostmarkEmailClient, redis_banned_token_store::RedisBannedTokenStore, redis_two_fa_code_store::RedisTwoFACodeStore, two_fa::TwoFaCodeStore, MockEmailClient}, user::Email};
 #[allow(dead_code, unused)]
 
 use auth_service::{
@@ -9,10 +9,12 @@ use auth_service::{
     user::store::Users
 };
 use reqwest::{cookie::Jar, Client, Response};
+use secrecy::Secret;
 use serde::Serialize;
 use sqlx::{postgres::{PgConnectOptions, PgPoolOptions}, Connection, Executor, PgConnection, PgPool};
 use tokio::sync::RwLock;
 use uuid::Uuid;
+use wiremock::MockServer;
 
 pub struct TestApp {
     pub addr: String,
@@ -21,11 +23,16 @@ pub struct TestApp {
     pub banned_tokens: BannedTokenStoreType,
     pub two_fa_code: Arc<RwLock<RedisTwoFACodeStore>>,
     pub db_name: String,
+    pub email_server: MockServer, 
     pub clean_up_called: bool
 }
 
 impl TestApp {
     pub async fn new() -> Self {
+        let email_server = MockServer::start().await;
+        let base_url = email_server.uri(); // New!
+        let email_client = Arc::new(configure_postmark_email_client(base_url));
+        
         let redis_connection = Arc::new(RwLock::new(configure_redis()));
         let db_name = Uuid::new_v4().to_string();
         let pg_pool = configure_postgresql(&db_name).await;
@@ -34,7 +41,6 @@ impl TestApp {
             redis_connection.clone(),
         )));
         let two_fa_code = Arc::new(RwLock::new(RedisTwoFACodeStore::new(redis_connection)));
-        let email_client = Arc::new(RwLock::new(MockEmailClient));
 
         let app_state = AppState {
             banned_token_store: banned_token_store.clone(),
@@ -65,6 +71,7 @@ impl TestApp {
             banned_tokens: banned_token_store,
             two_fa_code,
             db_name,
+            email_server,
             clean_up_called: false
         }
     }
@@ -269,4 +276,17 @@ fn configure_redis() -> redis::Connection {
         .expect("Failed to get Redis client")
         .get_connection()
         .expect("Failed to get Redis connection")
+}
+
+fn configure_postmark_email_client(base_url: String) -> PostmarkEmailClient {
+    let postmark_auth_token = Secret::new("auth_token".to_owned());
+
+    let sender = Email::parse(test::email_client::SENDER.to_owned()).unwrap();
+
+    let http_client = Client::builder()
+        .timeout(test::email_client::TIMEOUT)
+        .build()
+        .expect("Failed to build HTTP client");
+
+    PostmarkEmailClient::new(base_url, sender, postmark_auth_token, http_client)
 }

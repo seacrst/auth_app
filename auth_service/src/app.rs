@@ -14,7 +14,7 @@ pub mod state;
 pub mod email_client;
 
 use state::AppState;
-use super::api_handlers::{
+use super::route_handlers::{
     login,
     logout,
     signup,

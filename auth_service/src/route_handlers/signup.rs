@@ -1,6 +1,5 @@
 
 use axum::{extract::State, response::IntoResponse, Json};
-use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -42,7 +41,7 @@ pub async fn signup(State(state): State<AppState>, Json(SignupRequest {email, pa
         message: "User created successfully!".to_string(),
     });
 
-    Ok((StatusCode::CREATED, response))
+    Ok((axum::http::StatusCode::CREATED, response))
 }
 
 
